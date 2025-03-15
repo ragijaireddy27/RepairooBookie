@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/RepairooBookie/static/css/main.87c49abc.css",
-    "main.js": "/RepairooBookie/static/js/main.a744759c.js",
+    "main.js": "/RepairooBookie/static/js/main.3820cc2d.js",
     "static/js/453.8ab44547.chunk.js": "/RepairooBookie/static/js/453.8ab44547.chunk.js",
     "index.html": "/RepairooBookie/index.html",
     "main.87c49abc.css.map": "/RepairooBookie/static/css/main.87c49abc.css.map",
-    "main.a744759c.js.map": "/RepairooBookie/static/js/main.a744759c.js.map",
+    "main.3820cc2d.js.map": "/RepairooBookie/static/js/main.3820cc2d.js.map",
     "453.8ab44547.chunk.js.map": "/RepairooBookie/static/js/453.8ab44547.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.87c49abc.css",
-    "static/js/main.a744759c.js"
+    "static/js/main.3820cc2d.js"
   ]
 }
