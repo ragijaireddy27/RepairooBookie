@@ -1,5 +1,5 @@
 const express = require("express");
-const pool = require("../config/db");
+const Review = require("../models/Review"); // Mongoose model for Review
 
 const router = express.Router();
 
@@ -8,15 +8,21 @@ router.post("/", async (req, res) => {
   const { userId, serviceId, rating, review } = req.body;
 
   try {
-    const newReview = await pool.query(
-      `INSERT INTO reviews (user_id, service_id, rating, review) 
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [userId, serviceId, rating, review]
-    );
+    // Check if rating is within valid range
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    }
 
-    res.status(201).json({ message: "Review added", review: newReview.rows[0] });
+    const newReview = await Review.create({
+      userId,
+      serviceId,
+      rating,
+      review,
+    });
+
+    res.status(201).json({ message: "Review added", review: newReview });
   } catch (error) {
-    console.error(error);
+    console.error("Error adding review:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -26,10 +32,15 @@ router.get("/:serviceId", async (req, res) => {
   const { serviceId } = req.params;
 
   try {
-    const reviews = await pool.query("SELECT * FROM reviews WHERE service_id = $1", [serviceId]);
-    res.json(reviews.rows);
+    const reviews = await Review.find({ serviceId });
+
+    if (reviews.length === 0) {
+      return res.status(404).json({ message: "No reviews found for this service" });
+    }
+
+    res.json(reviews);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching reviews:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

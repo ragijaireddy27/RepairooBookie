@@ -1,44 +1,19 @@
-module.exports = (sequelize, DataTypes) => {
-    const Booking = sequelize.define("Booking", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      user_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      service_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      booking_date: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      status: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      payment_status: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      total_amount: {
-        type: DataTypes.NUMERIC,
-        allowNull: false,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-    });
-  
-    return Booking;
-  };
-  
+const mongoose = require('mongoose');
+
+// Define the Booking schema
+const bookingSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    serviceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
+    bookingDate: { type: Date, required: true },
+    status: { type: String, required: true },
+    paymentStatus: { type: String, required: true },
+    totalAmount: { type: Number, required: true },
+  },
+  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+);
+
+// Create a model from the schema
+const Booking = mongoose.model('Booking', bookingSchema);
+
+module.exports = Booking;

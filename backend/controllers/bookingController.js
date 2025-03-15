@@ -1,4 +1,5 @@
-const pool = require("../config/db");
+const Booking = require("../models/Booking"); // Mongoose Booking model
+const { validationResult } = require("express-validator");
 
 // Validate booking inputs
 const validateBookingInputs = ({ userId, serviceType, address, pincode, workerId, status }) => {
@@ -24,13 +25,20 @@ const createBooking = async (req, res) => {
     }
 
     try {
-        // Insert booking into the database
-        const newBooking = await pool.query(
-            "INSERT INTO bookings (user_id, service_type, address, pincode, worker_id, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-            [userId, serviceType, address, pincode, workerId, status]
-        );
+        // Create a new booking in MongoDB
+        const newBooking = new Booking({
+            userId,
+            serviceType,
+            address,
+            pincode,
+            workerId,
+            status,
+        });
 
-        res.status(201).json({ message: "Booking created successfully", booking: newBooking.rows[0] });
+        // Save the booking to MongoDB
+        const savedBooking = await newBooking.save();
+
+        res.status(201).json({ message: "Booking created successfully", booking: savedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error creating booking", error });
@@ -48,17 +56,18 @@ const updateBookingStatus = async (req, res) => {
     }
 
     try {
-        // Update the booking status in the database
-        const updatedBooking = await pool.query(
-            "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *",
-            [status, bookingId]
+        // Update the booking status in MongoDB
+        const updatedBooking = await Booking.findByIdAndUpdate(
+            bookingId,
+            { status },
+            { new: true } // This ensures the updated document is returned
         );
 
-        if (updatedBooking.rows.length === 0) {
+        if (!updatedBooking) {
             return res.status(404).json({ message: "Booking not found" });
         }
 
-        res.status(200).json({ message: "Booking status updated", booking: updatedBooking.rows[0] });
+        res.status(200).json({ message: "Booking status updated", booking: updatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error updating booking status", error });
@@ -70,17 +79,14 @@ const getUserBookings = async (req, res) => {
     const { userId } = req.params;
 
     try {
-        // Fetch all bookings for the user from the database
-        const userBookings = await pool.query(
-            "SELECT * FROM bookings WHERE user_id = $1",
-            [userId]
-        );
+        // Fetch all bookings for the user from MongoDB
+        const userBookings = await Booking.find({ userId });
 
-        if (userBookings.rows.length === 0) {
+        if (userBookings.length === 0) {
             return res.status(404).json({ message: "No bookings found for this user" });
         }
 
-        res.status(200).json({ bookings: userBookings.rows });
+        res.status(200).json({ bookings: userBookings });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error fetching user bookings", error });
@@ -92,17 +98,14 @@ const getWorkerBookings = async (req, res) => {
     const { workerId } = req.params;
 
     try {
-        // Fetch all bookings assigned to the worker
-        const workerBookings = await pool.query(
-            "SELECT * FROM bookings WHERE worker_id = $1",
-            [workerId]
-        );
+        // Fetch all bookings assigned to the worker from MongoDB
+        const workerBookings = await Booking.find({ workerId });
 
-        if (workerBookings.rows.length === 0) {
+        if (workerBookings.length === 0) {
             return res.status(404).json({ message: "No bookings found for this worker" });
         }
 
-        res.status(200).json({ bookings: workerBookings.rows });
+        res.status(200).json({ bookings: workerBookings });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error fetching worker bookings", error });

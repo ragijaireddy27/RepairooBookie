@@ -1,40 +1,19 @@
-module.exports = (sequelize, DataTypes) => {
-    const Payment = sequelize.define("Payment", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      booking_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      payment_amount: {
-        type: DataTypes.NUMERIC,
-        allowNull: false,
-      },
-      payment_method: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      payment_date: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      payment_status: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-    });
-  
-    return Payment;
-  };
-  
+const mongoose = require('mongoose');
+
+// Define the Payment schema
+const paymentSchema = new mongoose.Schema(
+  {
+    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true }, // Reference to the Booking model
+    paymentAmount: { type: Number, required: true }, // Payment amount
+    paymentMethod: { type: String, required: true, enum: ['offline', 'credit_card', 'debit_card'] }, // Only 'offline' is allowed for offline payment
+    paymentDate: { type: Date, required: true },
+    paymentStatus: { type: String, required: true, enum: ['pending', 'completed', 'failed'] }, // Payment status
+    otherCharges: { type: Number, default: 0 }, // Additional charges if any
+  },
+  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+);
+
+// Create a model from the schema
+const Payment = mongoose.model('Payment', paymentSchema);
+
+module.exports = Payment;

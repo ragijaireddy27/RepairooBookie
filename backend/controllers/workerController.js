@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { Worker } = require('../models'); // Adjust path if necessary
+const { Worker } = require('../models'); // Assuming 'Worker' is the Mongoose model
 
 // Register a new worker
 const registerWorker = async (req, res) => {
@@ -10,14 +10,14 @@ const registerWorker = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const existingWorker = await Worker.findOne({ where: { email } });
+    const existingWorker = await Worker.findOne({ email });
     if (existingWorker) {
       return res.status(400).json({ message: "Email is already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newWorker = await Worker.create({
+    const newWorker = new Worker({
       name,
       email,
       password: hashedPassword,
@@ -32,6 +32,8 @@ const registerWorker = async (req, res) => {
       updated_at: new Date(),
     });
 
+    await newWorker.save(); // Save the new worker to the database
+
     return res.status(201).json({ message: "Worker registered successfully!" });
   } catch (error) {
     console.error("Error during worker registration:", error);
@@ -44,7 +46,7 @@ const getWorkerProfile = async (req, res) => {
   const workerId = req.worker.id;
 
   try {
-    const workerProfile = await Worker.findByPk(workerId);
+    const workerProfile = await Worker.findById(workerId);
 
     if (!workerProfile) {
       return res.status(404).json({ message: "Worker not found" });
@@ -63,7 +65,7 @@ const updateWorkerProfile = async (req, res) => {
   const { name, email, phone, address, serviceTypes, aadhaarProof, shopDetails, license } = req.body;
 
   try {
-    const worker = await Worker.findByPk(workerId);
+    const worker = await Worker.findById(workerId);
 
     if (!worker) {
       return res.status(404).json({ message: "Worker not found" });
@@ -94,7 +96,7 @@ const changeWorkerPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
   try {
-    const worker = await Worker.findByPk(workerId);
+    const worker = await Worker.findById(workerId);
 
     if (!worker) {
       return res.status(404).json({ message: "Worker not found" });

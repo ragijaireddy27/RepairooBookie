@@ -1,32 +1,16 @@
-module.exports = (sequelize, DataTypes) => {
-    const WorkerAvailability = sequelize.define("WorkerAvailability", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      worker_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      available_from: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      available_to: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-    });
-  
-    return WorkerAvailability;
-  };
-  
+const mongoose = require('mongoose');
+
+// Define the WorkerAvailability schema
+const workerAvailabilitySchema = new mongoose.Schema(
+  {
+    workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker', required: true }, // Reference to Worker model
+    availableFrom: { type: Date, required: true }, // Worker available from this time
+    availableTo: { type: Date, required: true }, // Worker available until this time
+  },
+  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+);
+
+// Create a model from the schema
+const WorkerAvailability = mongoose.model('WorkerAvailability', workerAvailabilitySchema);
+
+module.exports = WorkerAvailability;

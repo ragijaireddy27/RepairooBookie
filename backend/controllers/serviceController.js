@@ -4,7 +4,7 @@ const { Worker } = require('../models'); // Assuming a Worker model is set up
 // Get all available services
 const getAllServices = async (req, res) => {
     try {
-        const services = await Service.findAll(); // Assuming Service model is properly set up
+        const services = await Service.find(); // Mongoose equivalent of finding all documents
 
         if (services.length === 0) {
             return res.status(404).json({ message: "No services available" });
@@ -22,13 +22,13 @@ const getWorkerServices = async (req, res) => {
     const workerId = req.worker.id; // Assuming worker ID is stored in JWT payload
 
     try {
-        const worker = await Worker.findByPk(workerId);
+        const worker = await Worker.findById(workerId); // Mongoose method to find a document by ID
 
         if (!worker) {
             return res.status(404).json({ message: "Worker not found" });
         }
 
-        const services = await Service.findAll({ where: { worker_id: workerId } });
+        const services = await Service.find({ worker_id: workerId }); // Mongoose find by worker_id
 
         if (services.length === 0) {
             return res.status(404).json({ message: "No services found for this worker" });
@@ -52,16 +52,16 @@ const addService = async (req, res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        const newService = await Service.create({
+        const newService = new Service({
             service_name: serviceName,
             description,
             price,
             worker_id: workerId, // Associate service with worker
-            created_at: new Date(),
-            updated_at: new Date(),
         });
 
-        res.status(201).json({ message: "Service added successfully", service: newService });
+        const savedService = await newService.save(); // Save the service to MongoDB
+
+        res.status(201).json({ message: "Service added successfully", service: savedService });
     } catch (error) {
         console.error("Error adding service:", error);
         res.status(500).json({ message: "Error adding service" });
@@ -75,13 +75,13 @@ const updateService = async (req, res) => {
     const { serviceName, description, price } = req.body;
 
     try {
-        const service = await Service.findByPk(serviceId);
+        const service = await Service.findById(serviceId); // Mongoose method to find a service by ID
 
         if (!service) {
             return res.status(404).json({ message: "Service not found" });
         }
 
-        if (service.worker_id !== workerId) {
+        if (service.worker_id.toString() !== workerId.toString()) {
             return res.status(403).json({ message: "You can only update your own services" });
         }
 
@@ -89,11 +89,10 @@ const updateService = async (req, res) => {
         service.service_name = serviceName || service.service_name;
         service.description = description || service.description;
         service.price = price || service.price;
-        service.updated_at = new Date();
 
-        await service.save();
+        const updatedService = await service.save(); // Save the updated service
 
-        res.status(200).json({ message: "Service updated successfully", service });
+        res.status(200).json({ message: "Service updated successfully", service: updatedService });
     } catch (error) {
         console.error("Error updating service:", error);
         res.status(500).json({ message: "Error updating service" });
@@ -106,17 +105,17 @@ const deleteService = async (req, res) => {
     const workerId = req.worker.id; // Assuming worker ID is stored in JWT payload
 
     try {
-        const service = await Service.findByPk(serviceId);
+        const service = await Service.findById(serviceId); // Mongoose method to find a service by ID
 
         if (!service) {
             return res.status(404).json({ message: "Service not found" });
         }
 
-        if (service.worker_id !== workerId) {
+        if (service.worker_id.toString() !== workerId.toString()) {
             return res.status(403).json({ message: "You can only delete your own services" });
         }
 
-        await service.destroy();
+        await service.remove(); // Mongoose method to delete the service
 
         res.status(200).json({ message: "Service deleted successfully" });
     } catch (error) {

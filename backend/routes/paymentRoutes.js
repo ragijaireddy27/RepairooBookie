@@ -1,6 +1,5 @@
 const express = require("express");
-const pool = require("../config/db");
-
+const Payment = require("../models/Payment"); // Mongoose model for Payment
 const router = express.Router();
 
 // Add payment details
@@ -8,15 +7,17 @@ router.post("/", async (req, res) => {
   const { bookingId, paymentAmount, paymentMethod, paymentDate, paymentStatus } = req.body;
 
   try {
-    const newPayment = await pool.query(
-      `INSERT INTO payments (booking_id, payment_amount, payment_method, payment_date, payment_status) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [bookingId, paymentAmount, paymentMethod, paymentDate, paymentStatus]
-    );
+    const newPayment = await Payment.create({
+      bookingId,
+      paymentAmount,
+      paymentMethod,
+      paymentDate,
+      paymentStatus,
+    });
 
-    res.status(201).json({ message: "Payment added", payment: newPayment.rows[0] });
+    res.status(201).json({ message: "Payment added", payment: newPayment });
   } catch (error) {
-    console.error(error);
+    console.error("Error adding payment:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -26,10 +27,15 @@ router.get("/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
 
   try {
-    const payment = await pool.query("SELECT * FROM payments WHERE booking_id = $1", [bookingId]);
-    res.json(payment.rows);
+    const payments = await Payment.find({ bookingId });
+
+    if (payments.length === 0) {
+      return res.status(404).json({ message: "No payments found for this booking ID" });
+    }
+
+    res.json(payments);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching payment details:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

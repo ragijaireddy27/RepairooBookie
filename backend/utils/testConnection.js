@@ -1,18 +1,17 @@
-const { Sequelize } = require('sequelize');
+const mongoose = require('mongoose');
 
-// Create a Sequelize instance to connect to the database
-const sequelize = new Sequelize('repairoo_bookie', 'postgres', 'ragi', {
-  host: 'localhost',
-  dialect: 'postgres',
-});
+const mongoURI = 'mongodb://localhost:27017/repairooBookie'; // Local MongoDB URI
 
-// Test the connection
+// Test the connection to MongoDB
 async function testConnection() {
   try {
-    await sequelize.authenticate();
-    console.log('Database connection successful');
+    await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('MongoDB connection successful');
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('Unable to connect to MongoDB:', error);
   }
 }
 

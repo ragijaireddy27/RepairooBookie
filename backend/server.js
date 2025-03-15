@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { Pool } = require("pg");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -10,13 +10,15 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+// MongoDB Connection
+const mongoURI = process.env.MONGO_URI || "mongodb+srv://<db_username>:<db_password>@cluster0.g8dkr.mongodb.net/repairoo?retryWrites=true&w=majority&appName=Cluster0";
+
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB Connected Successfully"))
+.catch(err => console.error("MongoDB Connection Error:", err));
 
 // Import routes
 const authRoutes = require("./routes/authRoutes");
@@ -25,10 +27,10 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 
 // Use routes
-app.use("/api/auth", authRoutes); // Handles user login and registration
-app.use("/api/workers", workerRoutes); // Handles worker registration
-app.use("/api/bookings", bookingRoutes); // Handles bookings for users and workers
-app.use("/api/reviews", reviewRoutes); // Handles service reviews
+app.use("/api/auth", authRoutes);
+app.use("/api/workers", workerRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // Helper to verify JWT token
 const verifyToken = (req, res, next) => {

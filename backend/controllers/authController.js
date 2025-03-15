@@ -1,6 +1,7 @@
-const pool = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User"); // Mongoose User model
+const Worker = require("../models/Worker"); // Mongoose Worker model
 require("dotenv").config();
 
 // Helper function for generating JWT token
@@ -14,20 +15,27 @@ const registerUser = async (req, res) => {
 
     try {
         // Check if user exists
-        const existingUser = await pool.query("SELECT * FROM users WHERE email = $1 OR phone = $2", [email, phone]);
-        if (existingUser.rows.length > 0) return res.status(400).json({ message: "User already exists with this email or phone number." });
+        const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+        if (existingUser) return res.status(400).json({ message: "User already exists with this email or phone number." });
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert user into database
-        const newUser = await pool.query(
-            "INSERT INTO users (name, email, phone, password, address, pincode, role) VALUES ($1, $2, $3, $4, $5, $6, 'user') RETURNING *",
-            [name, email, phone, hashedPassword, address, pincode]
-        );
+        // Create new user in MongoDB
+        const newUser = new User({
+            name,
+            email,
+            phone,
+            password: hashedPassword,
+            address,
+            pincode,
+            role: "user",
+        });
+
+        await newUser.save();
 
         // Generate JWT token
-        const token = generateToken(newUser.rows[0].id, "user");
+        const token = generateToken(newUser._id, "user");
 
         res.status(201).json({ message: "User registered successfully", token });
     } catch (error) {
@@ -42,15 +50,15 @@ const loginUser = async (req, res) => {
 
     try {
         // Check if user exists
-        const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (user.rows.length === 0) return res.status(400).json({ message: "Invalid email or password" });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ message: "Invalid email or password" });
 
         // Compare passwords
-        const isMatch = await bcrypt.compare(password, user.rows[0].password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
 
         // Generate JWT token
-        const token = generateToken(user.rows[0].id, "user");
+        const token = generateToken(user._id, "user");
 
         res.json({ message: "Login successful", token });
     } catch (error) {
@@ -65,20 +73,30 @@ const registerWorker = async (req, res) => {
 
     try {
         // Check if worker exists
-        const existingWorker = await pool.query("SELECT * FROM workers WHERE email = $1 OR phone = $2", [email, phone]);
-        if (existingWorker.rows.length > 0) return res.status(400).json({ message: "Worker already exists with this email or phone number." });
+        const existingWorker = await Worker.findOne({ $or: [{ email }, { phone }] });
+        if (existingWorker) return res.status(400).json({ message: "Worker already exists with this email or phone number." });
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert worker into database
-        const newWorker = await pool.query(
-            "INSERT INTO workers (name, email, phone, password, address, pincode, service_type, aadhaar_proof, shop_details, shop_license) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [name, email, phone, hashedPassword, address, pincode, service_type, aadhaar_proof, shop_details, shop_license]
-        );
+        // Create new worker in MongoDB
+        const newWorker = new Worker({
+            name,
+            email,
+            phone,
+            password: hashedPassword,
+            address,
+            pincode,
+            service_type,
+            aadhaar_proof,
+            shop_details,
+            shop_license,
+        });
+
+        await newWorker.save();
 
         // Generate JWT token
-        const token = generateToken(newWorker.rows[0].id, "worker");
+        const token = generateToken(newWorker._id, "worker");
 
         res.status(201).json({ message: "Worker registered successfully", token });
     } catch (error) {
@@ -93,15 +111,15 @@ const loginWorker = async (req, res) => {
 
     try {
         // Check if worker exists
-        const worker = await pool.query("SELECT * FROM workers WHERE email = $1", [email]);
-        if (worker.rows.length === 0) return res.status(400).json({ message: "Invalid email or password" });
+        const worker = await Worker.findOne({ email });
+        if (!worker) return res.status(400).json({ message: "Invalid email or password" });
 
         // Compare passwords
-        const isMatch = await bcrypt.compare(password, worker.rows[0].password);
+        const isMatch = await bcrypt.compare(password, worker.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
 
         // Generate JWT token
-        const token = generateToken(worker.rows[0].id, "worker");
+        const token = generateToken(worker._id, "worker");
 
         res.json({ message: "Login successful", token });
     } catch (error) {

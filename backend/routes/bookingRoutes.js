@@ -6,15 +6,15 @@ const {
   updateBookingStatus,
   getUserBookings,
 } = require("../controllers/bookingController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware"); // Protect middleware for authorization
 
-// Get all bookings (for workers)
+// Get all bookings for workers (authenticated route)
 router.get("/worker/bookings", protect, getBookings);
 
-// Get user's bookings (for users to view their bookings)
+// Get all bookings for the authenticated user
 router.get("/user/bookings", protect, getUserBookings);
 
-// Create a booking (for users to book a service)
+// Create a new booking for the user (users can book services)
 router.post("/user/bookings", protect, createBooking);
 
 // Update booking status (for workers to accept or complete bookings)

@@ -1,16 +1,14 @@
-const { Pool } = require("pg");
-require("dotenv").config();
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+// MongoDB URI from environment variables
+const mongoURI = process.env.MONGO_URI;
 
-pool.connect()
-  .then(() => console.log("Connected to the database"))
-  .catch((err) => console.error("Database connection error", err));
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('Database connection error', err));
 
-module.exports = pool;
+module.exports = mongoose;

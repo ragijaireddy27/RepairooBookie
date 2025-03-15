@@ -1,36 +1,17 @@
-module.exports = (sequelize, DataTypes) => {
-    const WorkerDocument = sequelize.define("WorkerDocument", {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      worker_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      aadhaar: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      license: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      shop_details: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-    });
-  
-    return WorkerDocument;
-  };
-  
+const mongoose = require('mongoose');
+
+// Define the WorkerDocument schema
+const workerDocumentSchema = new mongoose.Schema(
+  {
+    workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker', required: true }, // Reference to Worker model
+    aadhaar: { type: String, required: true }, // Aadhaar number
+    license: { type: String, required: true }, // License number
+    shopDetails: { type: String, required: true }, // Shop details (could be text or JSON)
+  },
+  { timestamps: true } // Automatically adds createdAt and updatedAt fields
+);
+
+// Create a model from the schema
+const WorkerDocument = mongoose.model('WorkerDocument', workerDocumentSchema);
+
+module.exports = WorkerDocument;
